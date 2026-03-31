@@ -1,0 +1,5408 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "CrashSight Python SDK",
+    "version": "2.0.0",
+    "description": "CrashSight OpenAPI Python SDK 封装。\n\n**快速开始**\n\n```python\nfrom crashsight import CrashSightClient, Platform, CrashType\n\nclient = CrashSightClient(\n    user_id='your_user_id',\n    api_key='your_api_key',\n    region='cn',  # 或 'sg'\n)\n\n# 获取趋势数据\ndata = client.get_trend(\n    app_id='c5f3c55bbe',\n    platform=Platform.PC,\n    start_date='20260323',\n    end_date='20260329',\n)\n```\n\n**鉴权方式**\n\n请求 URL 附带三个查询参数：\n- `userSecret`: Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))\n- `localUserId`: 用户 ID\n- `t`: 当前 Unix 时间戳（秒）\n\n**频率限制**: 同一用户所有接口合计 25 次/分钟\n\n**注意**: 部分接口（getStackCrashStat、getCrashDeviceStat、getStackDeviceInfo、getCrashDeviceInfoByExpUid）需要应用级鉴权（appSecret/appId/X-token），无法使用标准 HMAC 用户级鉴权。",
+    "contact": {
+      "name": "CrashSight"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://crashsight.qq.com",
+      "description": "国内环境"
+    },
+    {
+      "url": "https://crashsight.wetest.net",
+      "description": "新加坡环境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "趋势统计",
+      "description": "趋势、汇总、排行榜类数据"
+    },
+    {
+      "name": "问题管理",
+      "description": "issue 查询、状态管理、缺陷单关联"
+    },
+    {
+      "name": "异常分析",
+      "description": "崩溃详情、堆栈、附件"
+    },
+    {
+      "name": "用户与设备",
+      "description": "用户崩溃记录、设备信息查询"
+    },
+    {
+      "name": "附件管理",
+      "description": "SDK 附件和服务端附件下载"
+    },
+    {
+      "name": "选择器与元数据",
+      "description": "版本列表、包名等基础数据"
+    }
+  ],
+  "security": [
+    {
+      "hmacAuth": []
+    }
+  ],
+  "paths": {
+    "/uniform/openapi/getTrendEx": {
+      "post": {
+        "operationId": "get_trend",
+        "summary": "获取趋势数据（最近N天）",
+        "description": "按日期范围查询崩溃/ANR/错误趋势数据，支持多版本合并、国家维度。\n\n对应 SDK 方法: `client.get_trend(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "项目ID",
+                    "example": "c5f3c55bbe"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ],
+                    "description": "平台类型: 1=Android, 2=iOS, 10=PC"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "开始日期 YYYYMMDD",
+                    "example": "20260323"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "结束日期 YYYYMMDD",
+                    "example": "20260329"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "dataType": {
+                    "type": "string",
+                    "default": "trendData",
+                    "description": "固定值 trendData"
+                  },
+                  "vm": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "default": 0,
+                    "description": "0=全部 1=真机 2=模拟器"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1",
+                    "description": "版本号，-1=全版本，支持通配符"
+                  },
+                  "versionList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "多版本列表"
+                  },
+                  "needCountryDimension": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "mergeMultipleVersionsWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_date",
+                  "end_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/fetchDimensionTopStats": {
+      "post": {
+        "operationId": "get_dimension_top_stats",
+        "summary": "获取崩溃/ANR/错误排行榜",
+        "description": "按设备型号、系统版本或应用版本维度排行，返回影响设备数 Top N。\n\n对应 SDK 方法: `client.get_dimension_top_stats(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "example": "c5f3c55bbe"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "minDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "maxDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "field": {
+                    "type": "string",
+                    "enum": [
+                      "model",
+                      "osVersion",
+                      "version"
+                    ],
+                    "default": "model",
+                    "description": "聚合维度: model=设备型号 osVersion=系统版本 version=应用版本"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 20
+                  },
+                  "mergeMultipleVersionsWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "mergeMultipleDatesWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "sortByException": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "needCountryDimension": {
+                    "type": "string",
+                    "enum": [
+                      "true",
+                      "false"
+                    ],
+                    "default": "false",
+                    "description": "注意：字符串 'true'/'false'，非布尔值"
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "min_date",
+                  "max_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/fetchDailySummary": {
+      "post": {
+        "operationId": "get_daily_summary",
+        "summary": "获取日级精简统计数据",
+        "description": "按天汇总 crash/anr/error/oom/jank/hang 全类型数据。\n\n对应 SDK 方法: `client.get_daily_summary(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "subModuleId": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "startHour": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH（天粒度填 00）",
+                    "example": "2026032300"
+                  },
+                  "endHour": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH（天粒度填 23）",
+                    "example": "2026032923"
+                  },
+                  "queryAllVmTypes": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_date",
+                  "end_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DailySummaryItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getAppRealTimeTrendAppendEx": {
+      "post": {
+        "operationId": "get_realtime_trend_append",
+        "summary": "获取今日累计趋势",
+        "description": "获取指定日期逐小时累计的崩溃趋势（实时）。\n\n对应 SDK 方法: `client.get_realtime_trend_append(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "当天开始 YYYYMMDDHH",
+                    "example": "2026033000"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "当天结束 YYYYMMDDHH",
+                    "example": "2026033023"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "dataType": {
+                    "type": "string",
+                    "default": "realTimeTrendData",
+                    "description": "固定值"
+                  },
+                  "vm": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "default": 0
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "mergeMultipleVersionsWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "needCountryDimension": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getRealTimeHourlyStatEx": {
+      "post": {
+        "operationId": "get_hourly_trend",
+        "summary": "获取小时粒度趋势",
+        "description": "获取指定小时范围内的趋势数据（精确到小时）。\n\n对应 SDK 方法: `client.get_hourly_trend(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH",
+                    "example": "2026032300"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH",
+                    "example": "2026032923"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "dataType": {
+                    "type": "string",
+                    "default": "realTimeCompareData",
+                    "description": "固定值"
+                  },
+                  "vm": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "default": 0
+                  },
+                  "mergeMultipleVersionsWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "needCountryDimension": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_hour",
+                  "end_hour"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getTopIssueHourly": {
+      "post": {
+        "operationId": "get_hourly_top_issues",
+        "summary": "获取小时级 TOP 问题列表",
+        "description": "获取指定小时的 TOP 崩溃问题列表。\n\n对应 SDK 方法: `client.get_hourly_top_issues(...)`",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "startHour": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH",
+                    "example": "2026033000"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "vm": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "default": 0
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 5
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_hour"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TopIssuesResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getMinuteCrashData": {
+      "post": {
+        "operationId": "get_minute_crash_data",
+        "summary": "获取分钟级崩溃数据（仅部分项目支持）",
+        "description": "获取分钟粒度的崩溃数据，仅部分项目开通此功能。\n\n对应 SDK 方法: `client.get_minute_crash_data(...)`\n\n⚠️ 响应时间较长（可能超过 30 秒），调用时建议将超时设置为 ≥ 60 秒。",
+        "tags": [
+          "趋势统计"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "product_version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 10
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryIssueList": {
+      "post": {
+        "operationId": "get_issue_list",
+        "summary": "获取崩溃/ANR/错误分析列表",
+        "description": "按条件查询问题列表，支持按状态、版本、异常类型过滤。\n\n对应 SDK 方法: `client.get_issue_list(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "pid": {
+                    "type": "string",
+                    "description": "与 platformId 相同（字符串）"
+                  },
+                  "exceptionTypeList": {
+                    "type": "string",
+                    "default": "Crash,Native,ExtensionCrash",
+                    "description": "崩溃: Crash,Native,ExtensionCrash | ANR: ANR | 错误: AllCatched,Unity3D,Lua,JS"
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "default": 20
+                  },
+                  "sortField": {
+                    "type": "string",
+                    "default": "uploadTime"
+                  },
+                  "sortOrder": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ],
+                    "default": "desc"
+                  },
+                  "skipQueryHbase": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "0=未处理,1=已处理,2=处理中，多选逗号分隔"
+                  },
+                  "version": {
+                    "type": "string",
+                    "description": "版本号，多版本分号分隔，支持通配符 *"
+                  },
+                  "tapdBugStatus": {
+                    "type": "string",
+                    "enum": [
+                      "UNREPORTED",
+                      "REPORTED"
+                    ]
+                  },
+                  "issueUploadTimeRelativeMillis": {
+                    "type": "integer",
+                    "description": "过滤最近 N 毫秒内有上报的问题"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/IssueListResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getTopIssueEx": {
+      "post": {
+        "operationId": "get_top_issues",
+        "summary": "获取 TOP 问题列表",
+        "description": "获取影响设备数最多的 TOP 问题，支持日期范围和多版本。\n\n对应 SDK 方法: `client.get_top_issues(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "与 minDate 相同，YYYYMMDD"
+                  },
+                  "minDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "maxDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 20
+                  },
+                  "topIssueDataType": {
+                    "type": "string",
+                    "enum": [
+                      "SystemExit",
+                      "unSystemExit"
+                    ],
+                    "default": "unSystemExit"
+                  },
+                  "mergeMultipleVersionsWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "mergeMultipleDatesWithInaccurateResult": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "versionList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "countryList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "fsn": {
+                    "type": "string",
+                    "description": "可任填唯一字符串"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "min_date",
+                  "max_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TopIssuesResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/issueInfo": {
+      "post": {
+        "operationId": "get_issue_info",
+        "summary": "获取 issue 详情",
+        "description": "根据 issueId 获取问题的完整详情，包含堆栈、统计、处理状态等。\n\n对应 SDK 方法: `client.get_issue_info(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "string",
+                    "enum": [
+                      "1",
+                      "2",
+                      "10"
+                    ],
+                    "description": "⚠️ 字符串类型: '1'=Android '2'=iOS '10'=PC"
+                  },
+                  "issueId": {
+                    "type": "string"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/IssueDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/noteList/appId/{appId}/platformId/{platformId}/issueId/{issueId}": {
+      "get": {
+        "operationId": "get_issue_notes",
+        "summary": "获取 issue 备注列表",
+        "description": "获取指定 issue 下的备注/评论列表。\n\n对应 SDK 方法: `client.get_issue_notes(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platformId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1,
+                2,
+                10
+              ],
+              "description": "平台类型: 1=Android, 2=iOS, 10=PC"
+            }
+          },
+          {
+            "name": "issueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "crashDataType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "undefined"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryIssueTrend": {
+      "post": {
+        "operationId": "get_issue_trend",
+        "summary": "获取问题趋势",
+        "description": "获取指定 issue 列表在时间范围内的趋势数据。\n\n对应 SDK 方法: `client.get_issue_trend(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "granularityUnit": {
+                    "type": "string",
+                    "enum": [
+                      "DAY",
+                      "HOUR"
+                    ],
+                    "default": "DAY"
+                  },
+                  "minDate": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "maxDate": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_ids",
+                  "min_date",
+                  "max_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/IssueTrendItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/updateIssueStatus": {
+      "post": {
+        "operationId": "update_issue_status",
+        "summary": "更新 issue 状态",
+        "description": "批量更新问题的处理状态、处理人和备注。\n\n对应 SDK 方法: `client.update_issue_status(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueIds": {
+                    "type": "string",
+                    "description": "问题ID，多个逗号分隔"
+                  },
+                  "status": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2,
+                      3
+                    ],
+                    "description": "0=未处理 1=处理中 2=已处理 3=重新打开"
+                  },
+                  "processors": {
+                    "type": "string",
+                    "description": "处理人 userId"
+                  },
+                  "note": {
+                    "type": "string"
+                  },
+                  "newUserId": {
+                    "type": "string",
+                    "description": "操作人 userId"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_ids",
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功，返回 true",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/addIssueNote": {
+      "post": {
+        "operationId": "add_issue_note",
+        "summary": "添加问题备注",
+        "description": "向指定 issue 添加一条备注。\n\n对应 SDK 方法: `client.add_issue_note(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueStatus": {
+                    "type": "integer",
+                    "default": 3
+                  },
+                  "issueIds": {
+                    "type": "string",
+                    "description": "问题ID"
+                  },
+                  "note": {
+                    "type": "string"
+                  },
+                  "createTime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "newUserId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id",
+                  "note"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "备注添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/addTag": {
+      "post": {
+        "operationId": "add_issue_tag",
+        "summary": "设置问题级标签",
+        "description": "为指定 issue 设置自定义标签。\n\n对应 SDK 方法: `client.add_issue_tag(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueId": {
+                    "type": "string"
+                  },
+                  "tagName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id",
+                  "tag_name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/TagResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/upsertBugs": {
+      "post": {
+        "operationId": "upsert_bugs",
+        "summary": "查询/创建缺陷单",
+        "description": "查询或创建关联的缺陷单（如 TAPD）。\n\n对应 SDK 方法: `client.upsert_bugs(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueList": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "缺陷单详情列表"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BugInfo"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryBugs": {
+      "post": {
+        "operationId": "query_bugs",
+        "summary": "查询缺陷单详情",
+        "description": "根据缺陷单ID查询缺陷单详情。\n\n对应 SDK 方法: `client.query_bugs(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "bugInfos": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/BugInfo"
+                    },
+                    "description": "每项含 bugPlatform 和 id"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "bug_infos"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BugInfo"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/bindBugs": {
+      "post": {
+        "operationId": "bind_bugs",
+        "summary": "绑定缺陷单",
+        "description": "将外部缺陷单（如 TAPD）与 issue 关联。\n\n对应 SDK 方法: `client.bind_bugs(...)`",
+        "tags": [
+          "问题管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "issueId": {
+                    "type": "string"
+                  },
+                  "bugId": {
+                    "type": "string"
+                  },
+                  "bugUrl": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id",
+                  "bug_id",
+                  "bug_url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "绑定成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/crashList": {
+      "post": {
+        "operationId": "get_crash_list",
+        "summary": "根据 issue 获取 crashHash 列表",
+        "description": "获取指定 issue 下的 crash 上报列表，支持 PC。\n\n对应 SDK 方法: `client.get_crash_list(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "pid": {
+                    "type": "integer",
+                    "description": "与 platformId 相同（整数）"
+                  },
+                  "issueId": {
+                    "type": "string"
+                  },
+                  "crashDataType": {
+                    "type": "string",
+                    "default": "undefined"
+                  },
+                  "start": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "default": 50
+                  },
+                  "searchType": {
+                    "type": "string",
+                    "default": "detail"
+                  },
+                  "exceptionTypeList": {
+                    "type": "string",
+                    "default": "Crash,Native,ExtensionCrash"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashListResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/lastCrashInfo": {
+      "post": {
+        "operationId": "get_last_crash",
+        "summary": "获取最近一次 crashHash",
+        "description": "获取指定 issue 最近一次上报的 crashHash，支持 PC。\n\n对应 SDK 方法: `client.get_last_crash(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "string",
+                    "enum": [
+                      "1",
+                      "2",
+                      "10"
+                    ],
+                    "description": "⚠️ 字符串类型"
+                  },
+                  "issues": {
+                    "type": "string",
+                    "description": "issueId（注意字段名是 issues）"
+                  },
+                  "crashDataType": {
+                    "type": "string",
+                    "default": "undefined"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/crashDoc": {
+      "post": {
+        "operationId": "get_crash_doc",
+        "summary": "获取异常详情（崩溃堆栈）",
+        "description": "获取崩溃的完整堆栈信息、ANR Trace 等，支持 PC。\n\n对应 SDK 方法: `client.get_crash_doc(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "string",
+                    "enum": [
+                      "1",
+                      "2",
+                      "10"
+                    ],
+                    "description": "⚠️ 字符串类型"
+                  },
+                  "crashHash": {
+                    "type": "string",
+                    "description": "crashId 每2位加':'格式"
+                  },
+                  "logtype": {
+                    "type": "string",
+                    "default": "",
+                    "enum": [
+                      "interface",
+                      "file",
+                      "all",
+                      ""
+                    ],
+                    "description": "仅PC有效"
+                  },
+                  "needQueryCustomKv": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "crash_hash"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashDoc"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/appDetailCrash": {
+      "post": {
+        "operationId": "get_crash_detail",
+        "summary": "获取跟踪数据、日志、自定义 KV",
+        "description": "获取崩溃的附件列表、系统日志、用户日志和自定义 KV。ANR 场景可从 attachList 中获取 anrMessage.txt 和 trace.zip。\n\n对应 SDK 方法: `client.get_crash_detail(...)` / `client.get_anr_message(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "string",
+                    "enum": [
+                      "1",
+                      "2",
+                      "10"
+                    ],
+                    "description": "⚠️ 字符串类型"
+                  },
+                  "crashHash": {
+                    "type": "string"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "crash_hash"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryCrashList": {
+      "post": {
+        "operationId": "query_crash_list",
+        "summary": "根据筛选条件拉取上报详情",
+        "description": "按时间、版本、设备、用户等条件检索崩溃上报记录。\n\n对应 SDK 方法: `client.query_crash_list(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "start": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "default": 50
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": ""
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "osVersion": {
+                    "type": "string"
+                  },
+                  "keyword": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "deviceId": {
+                    "type": "string"
+                  },
+                  "crashId": {
+                    "type": "string"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashListResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/advancedSearchEx": {
+      "post": {
+        "operationId": "advanced_search",
+        "summary": "崩溃分析自定义检索",
+        "description": "按小时范围进行高级检索，支持多维度筛选。\n\n对应 SDK 方法: `client.advanced_search(...)`",
+        "tags": [
+          "异常分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "startHour": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH"
+                  },
+                  "endHour": {
+                    "type": "string",
+                    "description": "YYYYMMDDHH"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "dataType": {
+                    "type": "string",
+                    "default": "realTimeTrendData",
+                    "description": "固定值"
+                  },
+                  "vm": {
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "default": 0
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_hour",
+                  "end_hour"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/CrashListResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryAccessList": {
+      "post": {
+        "operationId": "query_user_access_list",
+        "summary": "查询用户近 3 日异常数据上报",
+        "description": "查询指定用户或设备 ID 在最近 3 日内的异常上报情况。\n\n对应 SDK 方法: `client.query_user_access_list(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "uploadTimeBeginMillis": {
+                    "type": "integer",
+                    "description": "毫秒时间戳"
+                  },
+                  "userIdList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "与 deviceIdList 二选一"
+                  },
+                  "deviceIdList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "与 userIdList 二选一"
+                  },
+                  "skipDistinctQuery": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "pageNumber": {
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "type": "integer",
+                    "default": 3000
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "upload_time_begin_millis"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/AccessListResult"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getCrashUserInfo/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_crash_user_info",
+        "summary": "根据 openId 获取用户崩溃详情",
+        "description": "按用户 openId 查询指定时间范围内的崩溃详情。\n\n对应 SDK 方法: `client.get_crash_user_info(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string",
+                    "description": "trace ID"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  },
+                  "appId": {
+                    "type": "string"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "properties": {
+                      "user": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "{\"user\": [\"openid1\", \"openid2\"]}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 1000
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "user_ids",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getCrashUserList/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_crash_user_list",
+        "summary": "获取崩溃用户列表",
+        "description": "获取指定时间段内有崩溃上报的用户列表。\n\n对应 SDK 方法: `client.get_crash_user_list(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "description": "YYYYMMDD"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "crash",
+                      "anr",
+                      "error"
+                    ],
+                    "default": "crash"
+                  },
+                  "version": {
+                    "type": "string",
+                    "default": "-1"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_date",
+                  "end_date"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getMostReportUser": {
+      "post": {
+        "operationId": "get_most_report_users",
+        "summary": "获取 Top 上报用户崩溃次数",
+        "description": "查询崩溃次数最多的 Top N 用户。\n\n对应 SDK 方法: `client.get_most_report_users(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "customFields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "[{\"available\":true,\"name\":\"userId\",\"aggregateType\":0,\"termsSizeLimit\":10,\"needDistinctCount\":true}]"
+                  },
+                  "searchConditionGroup": {
+                    "type": "object",
+                    "description": "{\"conditions\":[{\"queryType\":\"TERMS_WILDCARD\",\"terms\":[\"-1\"],\"field\":\"version\"},{\"field\":\"crashUploadTime\",\"queryType\":\"RANGE_RELATIVE_DATETIME\",\"gte\":604800000},{\"queryType\":\"TERMS\",\"terms\":[\"CRASH\"],\"field\":\"exceptionCategory\"}]}"
+                  }
+                },
+                "required": [
+                  "app_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/MostReportUserItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getNetworkDevices/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_network_devices",
+        "summary": "获取联网设备数据（仅移动端）",
+        "description": "获取 Android/iOS 移动端联网设备数据。\n\n对应 SDK 方法: `client.get_network_devices(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "appId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getCrashDeviceInfo/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_crash_device_info",
+        "summary": "根据 issue 获取 crashHash 列表（移动端）",
+        "description": "移动端专用，根据 issueId 查询含设备信息的崩溃列表。\n\n对应 SDK 方法: `client.get_crash_device_info(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  },
+                  "appId": {
+                    "type": "string"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "description": "{\"issueId\": [\"issue_id_xxx\"]}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 1000
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "issue_ids",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getDeviceUserInfo/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_device_user_info",
+        "summary": "根据设备 ID 获取 OpenId",
+        "description": "根据设备 UUID 查询关联的用户 OpenId。\n\n对应 SDK 方法: `client.get_device_user_info(...)`",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "source": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "filters": {
+                    "type": "object",
+                    "default": {}
+                  },
+                  "deviceId": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 10
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  },
+                  "appId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "device_id",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getStackCrashStat": {
+      "post": {
+        "operationId": "get_stack_crash_stat",
+        "summary": "根据堆栈关键字获取崩溃统计",
+        "description": "按堆栈关键字统计崩溃数量和影响设备数。\n\n对应 SDK 方法: `client.get_stack_crash_stat(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "source": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "params": {
+                    "type": "object",
+                    "description": "{\"keyName\": \"RuntimeException\", \"appId\": \"xxx\"}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "key_name",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getCrashDeviceStat": {
+      "post": {
+        "operationId": "get_crash_device_stat",
+        "summary": "根据 deviceId 获取崩溃列表",
+        "description": "根据设备 ID 查询该设备的崩溃记录。\n\n对应 SDK 方法: `client.get_crash_device_stat(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "description": "{\"deviceId\": [\"device_uuid_xxx\"]}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  }
+                },
+                "required": [
+                  "platform",
+                  "device_ids",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getStackDeviceInfo": {
+      "post": {
+        "operationId": "get_stack_device_info",
+        "summary": "根据堆栈关键字获取机型列表",
+        "description": "查询包含指定堆栈关键字的崩溃涉及的设备型号列表。\n\n对应 SDK 方法: `client.get_stack_device_info(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "source": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "params": {
+                    "type": "object",
+                    "description": "{\"keyName\": \"RuntimeException\", \"appId\": \"xxx\"}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform",
+                  "key_name",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getCrashDeviceInfoByExpUid/platformId/{platformId}": {
+      "post": {
+        "operationId": "get_crash_device_info_by_exp_uid",
+        "summary": "根据 expUid 获取机型列表（移动端）",
+        "description": "根据异常 UID 查询对应的设备型号列表（移动端）。\n\n对应 SDK 方法: `client.get_crash_device_info_by_exp_uid(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "tags": [
+          "用户与设备"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestid": {
+                    "type": "string"
+                  },
+                  "stime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "etime": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "description": "{\"expUid\": [\"exp_uid_xxx\"]}"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 0
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "pretty"
+                  }
+                },
+                "required": [
+                  "platform",
+                  "exp_uids",
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/fetchSdkUploadedAttachments": {
+      "post": {
+        "operationId": "fetch_sdk_attachments",
+        "summary": "下载客户端 SDK 直传附件",
+        "description": "下载通过 SDK 上传的附件，如 CustomizedAttachFile.zip、SDK_LOG 等。\n\n对应 SDK 方法: `client.fetch_sdk_attachments(...)`",
+        "tags": [
+          "附件管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "crashIdList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "attachmentFilenameList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [
+                      "SDK_LOG"
+                    ]
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "crash_id_list"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/AttachmentResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/fetchMultipleCrashAttachments": {
+      "post": {
+        "operationId": "fetch_crash_attachments",
+        "summary": "批量下载客户端直传附件",
+        "description": "批量下载非 SDK 上传的附件，如 extraMessage.txt。\n\n对应 SDK 方法: `client.fetch_crash_attachments(...)`",
+        "tags": [
+          "附件管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "crashIdList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "attachmentFilenameList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [
+                      "extraMessage.txt"
+                    ]
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "crash_id_list"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/AttachmentResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getSelectorDatas": {
+      "post": {
+        "operationId": "get_selector_data",
+        "summary": "获取版本/包名/处理人等选择器数据",
+        "description": "获取版本列表、包名列表、处理人列表等 UI 选择器所需数据。\n\n对应 SDK 方法: `client.get_selector_data(...)`",
+        "tags": [
+          "选择器与元数据"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "pid": {
+                    "type": "string",
+                    "description": "platformId 字符串形式，如 '10'"
+                  },
+                  "types": {
+                    "type": "string",
+                    "default": "version,member,bundle,tag,channel"
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/SelectorDataResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/getVersionDateList": {
+      "post": {
+        "operationId": "get_version_date_list",
+        "summary": "获取版本号首次出现日期",
+        "description": "获取各版本号在系统中首次出现的日期列表。\n\n对应 SDK 方法: `client.get_version_date_list(...)`",
+        "tags": [
+          "选择器与元数据"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "platformId": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      10
+                    ]
+                  },
+                  "fsn": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "platform"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "example": 200
+                        },
+                        "data": {
+                          "$ref": "#/components/schemas/DeviceQueryResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TrendItem": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "platformId": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYYMMDD 或 YYYYMMDDHH"
+          },
+          "crashNum": {
+            "type": "integer"
+          },
+          "crashUser": {
+            "type": "integer"
+          },
+          "accessNum": {
+            "type": "integer"
+          },
+          "accessUser": {
+            "type": "integer"
+          },
+          "crashRate": {
+            "type": "number"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "IssueItem": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "exceptionName": {
+            "type": "string"
+          },
+          "exceptionMessage": {
+            "type": "string"
+          },
+          "keyStack": {
+            "type": "string"
+          },
+          "imeiCount": {
+            "type": "integer"
+          },
+          "uploadCount": {
+            "type": "integer"
+          },
+          "lastUploadTimestamp": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "processor": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "IssueListResponse": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "platformId": {
+            "type": "integer"
+          },
+          "numFound": {
+            "type": "integer"
+          },
+          "issueList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueItem"
+            }
+          }
+        }
+      },
+      "IssueDetail": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "exceptionName": {
+            "type": "string"
+          },
+          "exceptionMessage": {
+            "type": "string"
+          },
+          "keyStack": {
+            "type": "string"
+          },
+          "lastestUploadTime": {
+            "type": "string"
+          },
+          "latestUploadTimestamp": {
+            "type": "integer"
+          },
+          "imeiCount": {
+            "type": "integer"
+          },
+          "uploadCount": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "processor": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "CrashListResponse": {
+        "type": "object",
+        "properties": {
+          "numFound": {
+            "type": "integer"
+          },
+          "crashDatas": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "crashId": {
+                  "type": "string"
+                },
+                "crashTime": {
+                  "type": "string"
+                },
+                "uploadTime": {
+                  "type": "string"
+                },
+                "productVersion": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CrashDetail": {
+        "type": "object",
+        "properties": {
+          "crashId": {
+            "type": "string"
+          },
+          "attachList": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "sysLogs": {
+            "type": "string"
+          },
+          "userLogs": {
+            "type": "string"
+          },
+          "threadInfos": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CrashDoc": {
+        "type": "object",
+        "properties": {
+          "exists": {
+            "type": "boolean"
+          },
+          "wellFormed": {
+            "type": "boolean"
+          },
+          "crashMap": {
+            "type": "object"
+          },
+          "detailMap": {
+            "type": "object"
+          },
+          "esMap": {
+            "type": "object"
+          },
+          "dumpDownloadUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "TopIssuesResponse": {
+        "type": "object",
+        "properties": {
+          "crashNum": {
+            "type": "integer"
+          },
+          "crashDevices": {
+            "type": "integer"
+          },
+          "accessDevices": {
+            "type": "integer"
+          },
+          "topIssueList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueItem"
+            }
+          }
+        }
+      },
+      "SelectorDataResponse": {
+        "type": "object",
+        "properties": {
+          "versionList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tagList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "processorList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bundleIdList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "channelList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AttachmentResponse": {
+        "type": "object",
+        "properties": {
+          "crashIdAndAttachmentsList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "crashId": {
+                  "type": "string"
+                },
+                "attachments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "DeviceQueryResponse": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "array"
+            }
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "IssueTrendItem": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "trendList": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "uploadCount": {
+                  "type": "integer"
+                },
+                "imeiCount": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "DailySummaryItem": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "platformId": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "accessNum": {
+            "type": "integer"
+          },
+          "crashNum": {
+            "type": "integer"
+          },
+          "anrNum": {
+            "type": "integer"
+          },
+          "errorNum": {
+            "type": "integer"
+          },
+          "oomNum": {
+            "type": "integer"
+          },
+          "jankNum": {
+            "type": "integer"
+          }
+        }
+      },
+      "BugInfo": {
+        "type": "object",
+        "properties": {
+          "bugPlatform": {
+            "type": "string",
+            "example": "TAPD"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bugPlatform",
+          "id"
+        ]
+      },
+      "TagResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer"
+          },
+          "numFound": {
+            "type": "integer"
+          },
+          "tagInfoList": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AccessListResult": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "records": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MostReportUserItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "distinctCount": {
+            "type": "integer"
+          },
+          "bucketList": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "hmacAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "userSecret",
+        "description": "HMAC-SHA256 签名鉴权。需同时传递三个查询参数：\n- `userSecret`: Base64(Hex(HMAC-SHA256(key, localUserId_timestamp)))\n- `localUserId`: 用户ID\n- `t`: Unix 时间戳(秒)"
+      }
+    }
+  }
+}
