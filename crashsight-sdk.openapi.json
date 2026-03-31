@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "CrashSight Python SDK",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "description": "CrashSight OpenAPI Python SDK 封装。\n\n**快速开始**\n\n```python\nfrom crashsight import CrashSightClient, Platform, CrashType\n\nclient = CrashSightClient(\n    user_id='your_user_id',\n    api_key='your_api_key',\n    region='cn',  # 或 'sg'\n)\n\n# 获取趋势数据\ndata = client.get_trend(\n    app_id='c5f3c55bbe',\n    platform=Platform.PC,\n    start_date='20260323',\n    end_date='20260329',\n)\n```\n\n**鉴权方式**\n\n请求 URL 附带三个查询参数：\n- `userSecret`: Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))\n- `localUserId`: 用户 ID\n- `t`: 当前 Unix 时间戳（秒）\n\n**频率限制**: 同一用户所有接口合计 25 次/分钟\n\n**注意**: 部分接口（getStackCrashStat、getCrashDeviceStat、getStackDeviceInfo、getCrashDeviceInfoByExpUid）需要应用级鉴权（appSecret/appId/X-token），无法使用标准 HMAC 用户级鉴权。",
     "contact": {
       "name": "CrashSight"
