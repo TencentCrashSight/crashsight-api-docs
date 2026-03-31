@@ -3,7 +3,7 @@
   "info": {
     "title": "CrashSight Python SDK",
     "version": "1.0.0",
-    "description": "CrashSight OpenAPI Python SDK 封装。\n\n**快速开始**\n\n```python\nfrom crashsight import CrashSightClient, Platform, CrashType\n\nclient = CrashSightClient(\n    user_id='your_user_id',\n    api_key='your_api_key',\n    region='cn',  # 或 'sg'\n)\n\n# 获取趋势数据\ndata = client.get_trend(\n    app_id='c5f3c55bbe',\n    platform=Platform.PC,\n    start_date='20260323',\n    end_date='20260329',\n)\n```\n\n**鉴权方式**\n\n请求 URL 附带三个查询参数：\n- `userSecret`: Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))\n- `localUserId`: 用户 ID\n- `t`: 当前 Unix 时间戳（秒）\n\n**频率限制**: 同一用户所有接口合计 25 次/分钟\n\n**注意**: 部分接口（getStackCrashStat、getCrashDeviceStat、getStackDeviceInfo、getCrashDeviceInfoByExpUid）需要应用级鉴权（appSecret/appId/X-token），无法使用标准 HMAC 用户级鉴权。",
+    "description": "CrashSight OpenAPI Python SDK 封装。\n\n**快速开始**\n\n```python\nfrom crashsight import CrashSightClient, Platform, CrashType\n\nclient = CrashSightClient(\n    user_id='your_user_id',\n    api_key='your_api_key',\n    region='cn',  # 或 'sg'\n)\n\n# 获取趋势数据\ndata = client.get_trend(\n    app_id='c5f3c55bbe',\n    platform=Platform.PC,\n    start_date='20260323',\n    end_date='20260329',\n)\n```\n\n**鉴权方式**\n\n请求 URL 附带三个查询参数：\n- `userSecret`: Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))\n- `localUserId`: 用户 ID\n- `t`: 当前 Unix 时间戳（秒）\n\n**频率限制**: 同一用户所有接口合计 25 次/分钟\n\n**注意**: 部分带 `platformId` 路由的接口（如 getStackCrashStat、getCrashDeviceStat、getStackDeviceInfo、getCrashDeviceInfoByExpUid）使用标准 HMAC 用户级鉴权；调用时请传入正确的 `platformId`，且 `getCrashDeviceStat` / `getCrashDeviceInfoByExpUid` 的请求体中需显式带上 `appId`。",
     "contact": {
       "name": "CrashSight"
     }
@@ -4058,7 +4058,7 @@
       "post": {
         "operationId": "get_stack_crash_stat",
         "summary": "根据堆栈关键字获取崩溃统计",
-        "description": "按堆栈关键字统计崩溃数量和影响设备数。\n\n对应 SDK 方法: `client.get_stack_crash_stat(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "description": "按堆栈关键字统计崩溃数量和影响设备数。\n\n对应 SDK 方法: `client.get_stack_crash_stat(...)`\n\n使用标准 HMAC 用户级鉴权。路由中的 `platformId` 需按实际平台传入，请求体 `params` 中需包含 `appId`。",
         "tags": [
           "用户与设备"
         ],
@@ -4178,7 +4178,7 @@
       "post": {
         "operationId": "get_crash_device_stat",
         "summary": "根据 deviceId 获取崩溃列表",
-        "description": "根据设备 ID 查询该设备的崩溃记录。\n\n对应 SDK 方法: `client.get_crash_device_stat(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "description": "根据设备 ID 查询该设备的崩溃记录。\n\n对应 SDK 方法: `client.get_crash_device_stat(...)`\n\n使用标准 HMAC 用户级鉴权。路由中的 `platformId` 需按实际平台传入，请求体中需显式带上 `appId`。",
         "tags": [
           "用户与设备"
         ],
@@ -4233,6 +4233,10 @@
                   "etime": {
                     "type": "string",
                     "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "appId": {
+                    "type": "string",
+                    "description": "项目 ID"
                   },
                   "filters": {
                     "type": "object",
@@ -4293,7 +4297,7 @@
       "post": {
         "operationId": "get_stack_device_info",
         "summary": "根据堆栈关键字获取机型列表",
-        "description": "查询包含指定堆栈关键字的崩溃涉及的设备型号列表。\n\n对应 SDK 方法: `client.get_stack_device_info(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "description": "查询包含指定堆栈关键字的崩溃涉及的设备型号列表。\n\n对应 SDK 方法: `client.get_stack_device_info(...)`\n\n使用标准 HMAC 用户级鉴权。路由中的 `platformId` 需按实际平台传入，请求体 `params` 中需包含 `appId`。",
         "tags": [
           "用户与设备"
         ],
@@ -4413,7 +4417,7 @@
       "post": {
         "operationId": "get_crash_device_info_by_exp_uid",
         "summary": "根据 expUid 获取机型列表（移动端）",
-        "description": "根据异常 UID 查询对应的设备型号列表（移动端）。\n\n对应 SDK 方法: `client.get_crash_device_info_by_exp_uid(...)`\n\n⚠️ 此接口使用应用级鉴权（appSecret/appId/X-token），不支持标准 HMAC 用户级鉴权（userSecret/localUserId）。需在 CrashSight 项目设置中获取应用密钥。",
+        "description": "根据异常 UID 查询对应的设备型号列表（移动端）。\n\n对应 SDK 方法: `client.get_crash_device_info_by_exp_uid(...)`\n\n使用标准 HMAC 用户级鉴权。路由中的 `platformId` 需按实际平台传入，请求体中需显式带上 `appId`。",
         "tags": [
           "用户与设备"
         ],
@@ -4468,6 +4472,10 @@
                   "etime": {
                     "type": "string",
                     "description": "YYYY-MM-DD HH:MM:SS"
+                  },
+                  "appId": {
+                    "type": "string",
+                    "description": "项目 ID"
                   },
                   "filters": {
                     "type": "object",
