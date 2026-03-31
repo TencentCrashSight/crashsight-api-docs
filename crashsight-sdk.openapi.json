@@ -4054,7 +4054,7 @@
         }
       }
     },
-    "/uniform/openapi/getStackCrashStat": {
+    "/uniform/openapi/getStackCrashStat/platformId/{platformId}": {
       "post": {
         "operationId": "get_stack_crash_stat",
         "summary": "根据堆栈关键字获取崩溃统计",
@@ -4174,7 +4174,7 @@
         }
       }
     },
-    "/uniform/openapi/getCrashDeviceStat": {
+    "/uniform/openapi/getCrashDeviceStat/platformId/{platformId}": {
       "post": {
         "operationId": "get_crash_device_stat",
         "summary": "根据 deviceId 获取崩溃列表",
@@ -4289,7 +4289,7 @@
         }
       }
     },
-    "/uniform/openapi/getStackDeviceInfo": {
+    "/uniform/openapi/getStackDeviceInfo/platformId/{platformId}": {
       "post": {
         "operationId": "get_stack_device_info",
         "summary": "根据堆栈关键字获取机型列表",
