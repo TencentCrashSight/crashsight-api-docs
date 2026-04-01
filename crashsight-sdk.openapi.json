@@ -377,7 +377,7 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/TrendItem"
+                            "$ref": "#/components/schemas/DimensionTopItem"
                           }
                         }
                       }
@@ -1071,10 +1071,7 @@
                           "example": 200
                         },
                         "data": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/TrendItem"
-                          }
+                          "$ref": "#/components/schemas/MinuteCrashDataResponse"
                         }
                       }
                     }
@@ -2659,7 +2656,7 @@
                           "example": 200
                         },
                         "data": {
-                          "$ref": "#/components/schemas/CrashDetail"
+                          "$ref": "#/components/schemas/LastCrashResponse"
                         }
                       }
                     }
@@ -4953,11 +4950,34 @@
           "accessUser": {
             "type": "integer"
           },
-          "crashRate": {
-            "type": "number"
-          },
           "country": {
             "type": "string"
+          },
+          "crashSession": {
+            "type": "integer",
+            "description": "崩溃会话数"
+          },
+          "multiCrashDevice": {
+            "type": "integer",
+            "description": "多次崩溃设备数"
+          },
+          "reportNumAllData": {
+            "type": "integer"
+          },
+          "reportDeviceAllData": {
+            "type": "integer"
+          },
+          "countryOrRegionCode": {
+            "type": "string",
+            "description": "国家/地区编码"
+          },
+          "userSceneTag": {
+            "type": "string",
+            "description": "用户场景标签"
+          },
+          "vm": {
+            "type": "integer",
+            "description": "设备类型: 0=全部 1=真机 2=模拟器"
           }
         }
       },
@@ -5013,6 +5033,10 @@
             "items": {
               "$ref": "#/components/schemas/IssueItem"
             }
+          },
+          "apiTimingInfo": {
+            "type": "object",
+            "description": "API 耗时信息"
           }
         }
       },
@@ -5051,6 +5075,63 @@
           },
           "version": {
             "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "description": "上报总次数"
+          },
+          "crashNum": {
+            "type": "integer"
+          },
+          "detailId": {
+            "type": "string"
+          },
+          "esMap": {
+            "type": "object",
+            "description": "ES 扩展字段"
+          },
+          "firstCrashVersion": {
+            "type": "string",
+            "description": "首次崩溃版本"
+          },
+          "firstUploadTime": {
+            "type": "string",
+            "description": "首次上报时间"
+          },
+          "firstUploadTimestamp": {
+            "type": "integer"
+          },
+          "ftName": {
+            "type": "string"
+          },
+          "issueExceptionType": {
+            "type": "string",
+            "description": "异常类型"
+          },
+          "issueHash": {
+            "type": "string"
+          },
+          "issueVersions": {
+            "type": "string",
+            "description": "影响的版本列表"
+          },
+          "parentHash": {
+            "type": "string"
+          },
+          "sysCount": {
+            "type": "integer",
+            "description": "系统退出次数"
+          },
+          "sysImeiCount": {
+            "type": "integer",
+            "description": "系统退出设备数"
+          },
+          "tagInfoList": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "标签列表"
           }
         }
       },
@@ -5082,6 +5163,51 @@
                 }
               }
             }
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "reqSendTimestamp": {
+            "type": "integer"
+          },
+          "rspReceivedTimestamp": {
+            "type": "integer"
+          },
+          "rspSendTimestamp": {
+            "type": "integer"
+          },
+          "issueList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "关联的 issueId 列表"
+          },
+          "crashIdList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "crashId 列表"
+          },
+          "crashNums": {
+            "type": "integer"
+          },
+          "anrNums": {
+            "type": "integer"
+          },
+          "errorNums": {
+            "type": "integer"
+          },
+          "jankNums": {
+            "type": "integer"
+          },
+          "hangNums": {
+            "type": "integer"
+          },
+          "totalCrashMatchCount": {
+            "type": "integer",
+            "description": "匹配的崩溃总数"
           }
         }
       },
@@ -5111,6 +5237,17 @@
           },
           "exists": {
             "type": "boolean"
+          },
+          "attachName": {
+            "type": "string"
+          },
+          "retraceCostMillis": {
+            "type": "integer",
+            "description": "符号还原耗时(ms)"
+          },
+          "retraceTimeout": {
+            "type": "boolean",
+            "description": "符号还原是否超时"
           }
         }
       },
@@ -5134,6 +5271,14 @@
           },
           "dumpDownloadUrl": {
             "type": "string"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "是否已归档"
+          },
+          "launchTime": {
+            "type": "string",
+            "description": "启动时间"
           }
         }
       },
@@ -5154,6 +5299,54 @@
             "items": {
               "$ref": "#/components/schemas/IssueItem"
             }
+          },
+          "prevHourCrashNum": {
+            "type": "integer",
+            "description": "上一小时崩溃次数"
+          },
+          "prevHourCrashDevices": {
+            "type": "integer",
+            "description": "上一小时崩溃设备数"
+          },
+          "prevHourAccessDevices": {
+            "type": "integer",
+            "description": "上一小时联网设备数"
+          },
+          "prevDaySameHourCrashNum": {
+            "type": "integer",
+            "description": "前一天同一小时崩溃次数"
+          },
+          "prevDaySameHourCrashDevices": {
+            "type": "integer",
+            "description": "前一天同一小时崩溃设备数"
+          },
+          "prevDaySameHourAccessDevices": {
+            "type": "integer",
+            "description": "前一天同一小时联网设备数"
+          },
+          "prevDayCrashNum": {
+            "type": "integer",
+            "description": "前一天崩溃次数"
+          },
+          "prevDayCrashDevices": {
+            "type": "integer",
+            "description": "前一天崩溃设备数"
+          },
+          "prevDayAccessDevices": {
+            "type": "integer",
+            "description": "前一天联网设备数"
+          },
+          "versionCrashUser": {
+            "type": "integer",
+            "description": "版本崩溃用户数"
+          },
+          "preDayVersionCrashUser": {
+            "type": "integer",
+            "description": "前一天版本崩溃用户数"
+          },
+          "apiTimingInfo": {
+            "type": "object",
+            "description": "API 耗时信息"
           }
         }
       },
@@ -5189,6 +5382,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "disableMemberInvitation": {
+            "type": "boolean"
           }
         }
       },
@@ -5294,6 +5490,77 @@
           },
           "jankNum": {
             "type": "integer"
+          },
+          "accessUser": {
+            "type": "integer",
+            "description": "联网用户数"
+          },
+          "crashSession": {
+            "type": "integer"
+          },
+          "crashUser": {
+            "type": "integer",
+            "description": "崩溃用户数"
+          },
+          "anrSession": {
+            "type": "integer"
+          },
+          "anrUser": {
+            "type": "integer"
+          },
+          "errorSession": {
+            "type": "integer"
+          },
+          "errorUser": {
+            "type": "integer"
+          },
+          "errorNumAllData": {
+            "type": "integer"
+          },
+          "errorDeviceAllData": {
+            "type": "integer"
+          },
+          "hangNum": {
+            "type": "integer"
+          },
+          "hangUser": {
+            "type": "integer"
+          },
+          "jankUser": {
+            "type": "integer"
+          },
+          "oomUser": {
+            "type": "integer"
+          },
+          "vitalNum": {
+            "type": "integer"
+          },
+          "vitalUser": {
+            "type": "integer"
+          },
+          "vmAccessNum": {
+            "type": "integer"
+          },
+          "vmAccessUser": {
+            "type": "integer"
+          },
+          "vmCrashNum": {
+            "type": "integer"
+          },
+          "vmCrashUser": {
+            "type": "integer"
+          },
+          "vmAnrNum": {
+            "type": "integer"
+          },
+          "vmAnrUser": {
+            "type": "integer"
+          },
+          "vmErrorNum": {
+            "type": "integer"
+          },
+          "vmErrorUser": {
+            "type": "integer"
           }
         }
       },
@@ -5366,6 +5633,156 @@
             "items": {
               "type": "object"
             }
+          },
+          "fieldFilterTotal": {
+            "type": "integer"
+          }
+        }
+      },
+      "MinuteCrashDataResponse": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "列名列表，如 [\"dt\", \"app_id\", \"crash_device\", \"access_device\"]"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {}
+            },
+            "description": "数据行，每行对应 columns 中的列"
+          },
+          "results": {
+            "description": "部分接口使用 results 而非 values 返回数据"
+          }
+        }
+      },
+      "LastCrashResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "bucketPath": {
+            "type": "string"
+          },
+          "threadName": {
+            "type": "string"
+          },
+          "crashId": {
+            "type": "string",
+            "description": "崩溃 ID"
+          },
+          "crashHash": {
+            "type": "string",
+            "description": "崩溃 Hash"
+          },
+          "crashTime": {
+            "type": "string"
+          },
+          "uploadTime": {
+            "type": "string"
+          },
+          "productVersion": {
+            "type": "string",
+            "description": "应用版本"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "hardware": {
+            "type": "string"
+          },
+          "osVersion": {
+            "type": "string"
+          },
+          "rom": {
+            "type": "string"
+          },
+          "cpuName": {
+            "type": "string"
+          },
+          "callStack": {
+            "type": "string",
+            "description": "崩溃堆栈摘要"
+          },
+          "retraceCrashDetail": {
+            "type": "string"
+          },
+          "gpuName": {
+            "type": "string"
+          },
+          "dumpId": {
+            "type": "string"
+          },
+          "new_dumpid": {
+            "type": "string"
+          },
+          "logId": {
+            "type": "string"
+          },
+          "detailId": {
+            "type": "string"
+          },
+          "expName": {
+            "type": "string"
+          },
+          "expAddr": {
+            "type": "string"
+          },
+          "hasLogFile": {
+            "type": "boolean"
+          },
+          "memSize": {
+            "type": "string"
+          },
+          "freeMem": {
+            "type": "string"
+          },
+          "elapsedTime": {
+            "type": "integer"
+          },
+          "launchTime": {
+            "type": "string"
+          },
+          "dumpDownloadUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "DimensionTopItem": {
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": "string"
+          },
+          "platformId": {
+            "type": "integer"
+          },
+          "fieldValue": {
+            "type": "string",
+            "description": "维度值（可读名称，如 iPhone 13）"
+          },
+          "fieldOriginalValue": {
+            "type": "string",
+            "description": "维度原始值（如 iPhone14,5）"
+          },
+          "date": {
+            "type": "string",
+            "description": "日期，合并时为 \"-\""
+          },
+          "exceptionDevices": {
+            "type": "integer",
+            "description": "崩溃影响设备数"
+          },
+          "accessDevices": {
+            "type": "integer",
+            "description": "联网设备数"
           }
         }
       }
