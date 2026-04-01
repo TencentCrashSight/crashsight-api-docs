@@ -4501,7 +4501,46 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "ret": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "noteId": {
+                            "type": "string"
+                          },
+                          "userId": {
+                            "type": "string"
+                          },
+                          "userName": {
+                            "type": "string"
+                          },
+                          "note": {
+                            "type": "string"
+                          },
+                          "createTime": {
+                            "type": "string"
+                          },
+                          "issueStatus": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "description": "备注列表，无备注时为空数组"
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "请求追踪 ID"
+                    }
+                  }
                 }
               }
             }
