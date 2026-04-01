@@ -1352,10 +1352,6 @@
                       "type": "string"
                     },
                     "default": []
-                  },
-                  "fsn": {
-                    "type": "string",
-                    "description": "可任填唯一字符串"
                   }
                 },
                 "required": [
@@ -1462,9 +1458,6 @@
                     "description": "⚠️ 字符串类型: '1'=Android '2'=iOS '10'=PC"
                   },
                   "issueId": {
-                    "type": "string"
-                  },
-                  "fsn": {
                     "type": "string"
                   }
                 },
@@ -2524,9 +2517,6 @@
                   "version": {
                     "type": "string",
                     "default": ""
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -2638,9 +2628,6 @@
                   "crashDataType": {
                     "type": "string",
                     "default": "undefined"
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -2763,9 +2750,6 @@
                   "needQueryCustomKv": {
                     "type": "boolean",
                     "default": false
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -2871,9 +2855,6 @@
                     "description": "⚠️ 字符串类型"
                   },
                   "crashHash": {
-                    "type": "string"
-                  },
-                  "fsn": {
                     "type": "string"
                   }
                 },
@@ -3024,9 +3005,6 @@
                   },
                   "crashId": {
                     "type": "string"
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -3163,9 +3141,6 @@
                       2
                     ],
                     "default": 0
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -3550,9 +3525,6 @@
                   "version": {
                     "type": "string",
                     "default": "-1"
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -4807,9 +4779,6 @@
                   "types": {
                     "type": "string",
                     "default": "version,member,bundle,tag,channel"
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -4911,9 +4880,6 @@
                       2,
                       10
                     ]
-                  },
-                  "fsn": {
-                    "type": "string"
                   }
                 },
                 "required": [
