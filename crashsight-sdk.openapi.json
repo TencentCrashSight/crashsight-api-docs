@@ -10632,283 +10632,6 @@
         }
       }
     },
-    "/uniform/openapi/fetchSdkUploadedAttachments": {
-      "post": {
-        "operationId": "fetch_sdk_attachments",
-        "summary": "下载客户端 SDK 直传附件",
-        "description": "下载通过 SDK 上传的附件，如 CustomizedAttachFile.zip、SDK_LOG 等。\n\n对应 SDK 方法: `client.fetch_sdk_attachments(...)`",
-        "tags": [
-          "附件管理"
-        ],
-        "security": [
-          {
-            "hmacAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "userSecret",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
-          },
-          {
-            "name": "localUserId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "用户 ID（在 CrashSight 个人设置中获取）"
-          },
-          {
-            "name": "t",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Unix 时间戳（秒）"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "appId": {
-                    "type": "string"
-                  },
-                  "crashIdList": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "attachmentFilenameList": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "default": [
-                      "SDK_LOG"
-                    ]
-                  }
-                },
-                "required": [
-                  "app_id",
-                  "crash_id_list"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "examples": [
-                        200
-                      ]
-                    },
-                    "ret": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer",
-                          "examples": [
-                            200
-                          ]
-                        },
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "crashIdAndAttachmentsList": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "crashId": {
-                                    "type": "string"
-                                  },
-                                  "expUid": {
-                                    "type": "string"
-                                  },
-                                  "attachments": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "object",
-                                      "properties": {
-                                        "fileName": {
-                                          "type": "string"
-                                        },
-                                        "fileType": {
-                                          "type": "integer"
-                                        },
-                                        "content": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/uniform/openapi/fetchMultipleCrashAttachments": {
-      "post": {
-        "operationId": "fetch_crash_attachments",
-        "summary": "批量下载客户端直传附件",
-        "description": "批量下载非 SDK 上传的附件，如 extraMessage.txt。\n\n对应 SDK 方法: `client.fetch_crash_attachments(...)`",
-        "tags": [
-          "附件管理"
-        ],
-        "security": [
-          {
-            "hmacAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "userSecret",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
-          },
-          {
-            "name": "localUserId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "用户 ID（在 CrashSight 个人设置中获取）"
-          },
-          {
-            "name": "t",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Unix 时间戳（秒）"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "appId": {
-                    "type": "string"
-                  },
-                  "crashIdList": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "attachmentFilenameList": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "default": [
-                      "extraMessage.txt"
-                    ]
-                  }
-                },
-                "required": [
-                  "app_id",
-                  "crash_id_list"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "examples": [
-                        200
-                      ]
-                    },
-                    "ret": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "integer",
-                          "examples": [
-                            200
-                          ]
-                        },
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "crashIdAndAttachmentsList": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "crashId": {
-                                    "type": "string"
-                                  },
-                                  "expUid": {
-                                    "type": "string"
-                                  },
-                                  "attachments": {
-                                    "type": "array",
-                                    "items": {}
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/uniform/openapi/getSelectorDatas": {
       "post": {
         "operationId": "get_selector_data",
@@ -11252,6 +10975,151 @@
                             },
                             "results": {
                               "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/fetchCrashAttachments": {
+      "post": {
+        "operationId": "fetch_crash_attachments",
+        "summary": "下载崩溃附件",
+        "description": "统一附件下载接口，支持 SDK 直传附件和服务端附件。\n\n支持的附件类型包括 SDK_LOG、CustomizedAttachFile.zip、CustomizedLogFile.log、extraMessage.txt 等。\n\n对应 SDK 方法: `client.fetch_crash_attachments(...)`",
+        "tags": [
+          "附件管理"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string"
+                  },
+                  "crashIdList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "attachmentFilenameList": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [
+                      "SDK_LOG"
+                    ]
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "crash_id_list"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "examples": [
+                            200
+                          ]
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "crashIdAndAttachmentsList": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "crashId": {
+                                    "type": "string"
+                                  },
+                                  "expUid": {
+                                    "type": "string"
+                                  },
+                                  "attachments": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "fileName": {
+                                          "type": "string"
+                                        },
+                                        "fileType": {
+                                          "type": "integer"
+                                        },
+                                        "content": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
                             }
                           }
                         }
