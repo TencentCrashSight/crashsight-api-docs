@@ -42,6 +42,10 @@
     {
       "name": "选择器与元数据",
       "description": "版本列表、包名等基础数据"
+    },
+    {
+      "name": "OOM 分析",
+      "description": "OOM 崩溃查询与分析"
     }
   ],
   "security": [
@@ -11120,6 +11124,270 @@
                                   }
                                 }
                               }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uniform/openapi/queryOomList": {
+      "post": {
+        "operationId": "query_oom_list",
+        "summary": "查询 OOM / 非 OOM 崩溃列表",
+        "description": "按搜索条件查询 OOM 或非 OOM 崩溃详情列表，返回内存、设备、会话等详细信息。\n\n对应 SDK 方法: `client.query_oom_list(...)`",
+        "tags": [
+          "OOM 分析"
+        ],
+        "security": [
+          {
+            "hmacAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userSecret",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "HMAC-SHA256 签名：Base64(Hex(HMAC-SHA256(key=userOpenapiKey, msg=localUserId_timestamp)))"
+          },
+          {
+            "name": "localUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "用户 ID（在 CrashSight 个人设置中获取）"
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unix 时间戳（秒）"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "项目 ID",
+                    "example": "i1110543085"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "返回条数"
+                  },
+                  "search": {
+                    "type": "object",
+                    "properties": {
+                      "searchConditionGroup": {
+                        "type": "object",
+                        "description": "搜索条件组，由用户自定义",
+                        "example": {
+                          "conditions": [
+                            {
+                              "queryType": "TERM",
+                              "term": "ONLY_IS_OOM",
+                              "field": "oomStatus"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "appId",
+                  "search"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "examples": [
+                        200
+                      ]
+                    },
+                    "ret": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "integer",
+                          "examples": [
+                            200
+                          ]
+                        },
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "description": "匹配总数"
+                            },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "appId": {
+                                    "type": "string"
+                                  },
+                                  "platformId": {
+                                    "type": "integer"
+                                  },
+                                  "version": {
+                                    "type": "string"
+                                  },
+                                  "userId": {
+                                    "type": "string"
+                                  },
+                                  "deviceId": {
+                                    "type": "string"
+                                  },
+                                  "model": {
+                                    "type": "string"
+                                  },
+                                  "modelProductName": {
+                                    "type": "string"
+                                  },
+                                  "osVer": {
+                                    "type": "string"
+                                  },
+                                  "cpuName": {
+                                    "type": "string"
+                                  },
+                                  "ramGib": {
+                                    "type": "integer"
+                                  },
+                                  "isOom": {
+                                    "type": "boolean"
+                                  },
+                                  "mark": {
+                                    "type": "string",
+                                    "description": "OOM 判定依据"
+                                  },
+                                  "expMsg": {
+                                    "type": "string"
+                                  },
+                                  "oomThresholdBytes": {
+                                    "type": "integer"
+                                  },
+                                  "predictedPssBytes": {
+                                    "type": "integer"
+                                  },
+                                  "lowMemory": {
+                                    "type": "boolean"
+                                  },
+                                  "iosFootprintMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "iosResidentMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "iosFreeMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "iosTotalMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "iosProcessTotalAvailableMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "aosTotalMemoryBytes": {
+                                    "type": "integer"
+                                  },
+                                  "aosFreeMemInfoBytes": {
+                                    "type": "integer"
+                                  },
+                                  "aosPssInfoBytes": {
+                                    "type": "integer"
+                                  },
+                                  "aosRssBytes": {
+                                    "type": "integer"
+                                  },
+                                  "elapsedTime": {
+                                    "type": "integer"
+                                  },
+                                  "uploadTimestamp": {
+                                    "type": "integer"
+                                  },
+                                  "sdkVersion": {
+                                    "type": "string"
+                                  },
+                                  "sdkSessionId": {
+                                    "type": "string"
+                                  },
+                                  "sessionUuid": {
+                                    "type": "string"
+                                  },
+                                  "matchUuid": {
+                                    "type": "string"
+                                  },
+                                  "expUid": {
+                                    "type": "string"
+                                  },
+                                  "bucketPath": {
+                                    "type": "string"
+                                  },
+                                  "srcCountry": {
+                                    "type": "string"
+                                  },
+                                  "keyValue": {
+                                    "type": "object"
+                                  },
+                                  "martianLog": {
+                                    "type": "string"
+                                  },
+                                  "userSceneTag": {
+                                    "type": "string"
+                                  },
+                                  "isVirtualMachine": {
+                                    "type": "integer"
+                                  },
+                                  "importance": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "aggList": {
+                              "type": "array",
+                              "items": {
+                                "type": "object"
+                              }
+                            },
+                            "modelProductNameMap": {
+                              "type": "object",
+                              "description": "机型名称映射"
                             }
                           }
                         }

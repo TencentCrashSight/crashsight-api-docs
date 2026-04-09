@@ -559,6 +559,31 @@ result = client.get_device_user_info(
 
 ---
 
+## OOM 分析
+
+### `query_oom_list` — 查询 OOM / 非 OOM 崩溃列表
+
+```python
+result = client.query_oom_list(
+    app_id="i1110543085",
+    search_condition_group={
+        "conditions": [{
+            "queryType": "TERM",
+            "term": "ONLY_IS_OOM",        # 仅 OOM
+            # "term": "ONLY_NOT_IS_OOM",  # 非 OOM
+            "field": "oomStatus"
+        }]
+    },
+    limit=10,
+)
+# 返回 {"total": int, "items": [...], "aggList": [...], "modelProductNameMap": {...}}
+
+for item in result.get("items", []):
+    print(f"{item['model']} | OOM={item['isOom']} | mem={item.get('predictedPssBytes')}")
+```
+
+---
+
 ## 附件管理
 
 ### `fetch_crash_attachments` — 下载崩溃附件
